@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using ShoppingCart.Business.Commands;
 using ShoppingCart.Business.Repositories;
 
 namespace ShoppingCart
@@ -11,14 +13,24 @@ namespace ShoppingCart
             var productRepository = new ProductRepository();
 
             var product = productRepository.FindBy("SM7B");
-
-            shoppingCartRepository.Add(product);
-            shoppingCartRepository.IncreaseQuantity(product.ArticleId);
-            shoppingCartRepository.IncreaseQuantity(product.ArticleId);
-            shoppingCartRepository.IncreaseQuantity(product.ArticleId);
-            shoppingCartRepository.IncreaseQuantity(product.ArticleId);
+            
+            var addToCartCommand = new AddToCartCommand(shoppingCartRepository, productRepository, product);
+            var increaseQuantityCommand = new ChangeQuantityCommand(ChangeQuantityCommand.Operation.Increase, 
+                                                            productRepository, 
+                                                            shoppingCartRepository, 
+                                                            product);
+            var manager = new CommandManager();
+            manager.Invoke(addToCartCommand);
+            manager.Invoke(increaseQuantityCommand);
+            manager.Invoke(increaseQuantityCommand);
+            manager.Invoke(increaseQuantityCommand);
+            manager.Invoke(increaseQuantityCommand);
 
             PrintCart(shoppingCartRepository);
+            
+            manager.Undo();
+            PrintCart(shoppingCartRepository);
+
         }
 
         static void PrintCart(ShoppingCartRepository shoppingCartRepository)
